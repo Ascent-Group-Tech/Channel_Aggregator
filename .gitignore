@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+#Python venv and Telegram
+venv/*
+.env
+*.session
+*.session-journal
