@@ -6,15 +6,10 @@ from .database import Base
 class Channels(Base):
     __tablename__ = "channels"
     
-    channel_id: Mapped[int] = mapped_column(primary_key=True)
-    channel_name: Mapped[str] = mapped_column(Text)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    channel_name: Mapped[str] = mapped_column(Text, unique=True)
 
-    #Цей рядок не позволяє БД створювати двя рядки з однаковим channel_id
-    __table_args__ = (
-        UniqueConstraint("channel_id"),
-    )
-
-    #Цей рядок дозволяє ORM встановлювати зв'язки між SourceMessage та TargetMessage
+    #Цей рядок дозволяє ORM встановлювати зв'язки між Channel та SourceMessage
     source_messages: Mapped[list["SourceMessage"]] = relationship(back_populates="channel")
 
 #Таблиця повідомлень каналу донора
