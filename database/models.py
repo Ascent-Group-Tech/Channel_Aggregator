@@ -1,6 +1,6 @@
 from sqlalchemy import String, Text, Boolean, DateTime, Integer, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from .database import Base
+from database import Base
 from datetime import datetime
 
 #Таблиця де кожному донорському каналу присвоюється ункальний ID
