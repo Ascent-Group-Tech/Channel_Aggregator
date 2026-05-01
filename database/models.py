@@ -1,9 +1,10 @@
 from sqlalchemy import String, Text, Boolean, DateTime, Integer, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from .database import Base
+from datetime import datetime
 
 #Таблиця де кожному донорському каналу присвоюється ункальний ID
-class Channels(Base):
+class Channel(Base):
     __tablename__ = "channels"
     
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -20,22 +21,25 @@ class SourceMessage(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     #ID повідомлення та каналу в якому воно опубліковане
-    channel_id: Mapped[int] = mapped_column(ForeignKey("channels.channel_id"))
-    message_id: Mapped[int] = mapped_column(index=True, primary_key=True)
+    channel_id: Mapped[int] = mapped_column(ForeignKey("channels.id"))
+    message_id_tg: Mapped[int] = mapped_column(index=True)
     
     #Інформація про повідомлення
     text: Mapped[str | None] = mapped_column(Text)
     price: Mapped[int | None] = mapped_column(Integer)
 
-    #Визначаємо чи це повідомлення з товаром та чи воно видалене
-    is_product: Mapped[bool] = mapped_column(Boolean, default=True)
+    #Визначаємо чи це повідомлення було видалене
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    channel: Mapped["Channels"] = relationship(back_populates="source_messages")
+    channel: Mapped["Channel"] = relationship(back_populates="source_messages")
     target_messages: Mapped[list["TargetMessage"]] = relationship(back_populates="source_message")
 
+    #Записуємо час коли ми створили та редагували рядок 
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(),onupdate=func.now())
+
     __table_args__ = (
-        UniqueConstraint("channel_id", "message_id"),
+        UniqueConstraint("channel_id", "message_id_tg"),
     )
 
 
@@ -46,16 +50,20 @@ class TargetMessage(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     #ID повідомлення в таблиці з яким зв'язане наше повідомлення
-    source_id: Mapped[int] = mapped_column(ForeignKey("source_messages.message_id"))
+    source_id: Mapped[int] = mapped_column(ForeignKey("source_messages.id"))
     
     #ID нашого повідомлення
-    message_id: Mapped[int] = mapped_column(index=True, unique=True)
+    message_id_tg: Mapped[int] = mapped_column(index=True, unique=True)
     
     #Інформація про повідомлення
     text: Mapped[str | None] = mapped_column(Text)
     price: Mapped[int | None] = mapped_column(Integer)
 
-    #Статус нашого повідомлення(active, deleted, skipped)
-    status: Mapped[str] = mapped_column(String(20), default="active")
+    #Визначаємо чи це повідомлення було видалене
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    #Записуємо час коли ми створили та редагували рядок 
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(),onupdate=func.now())
 
     source_message: Mapped["SourceMessage"] = relationship(back_populates="target_messages")

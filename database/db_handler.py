@@ -1,79 +1,115 @@
 from sqlalchemy.orm import Session
-import models
 from sqlalchemy.exc import IntegrityError
+import models
 
 
 #Додає новий канал у базу даних
-def add_channel(db: Session,channel_name: str):
-
+def add_channel(db: Session, channel_name: str):
     try:
-        new_channel = models.Channels(channel_name=channel_name)
-        
-        db.add(new_channel)
-        
+        channel = models.Channel(channel_name=channel_name)
+
+        db.add(channel)
         db.commit()
-        db.refresh(new_channel)
-        
-        print(f"✅ Канал '{channel_name}' успішно додано!")
-        return new_channel
-    
+        db.refresh(channel)
+
+        return channel
+
     except IntegrityError:
         db.rollback()
-        print(f"⚠️ Канал {channel_name} вже існує в базі.")
         return None
     
 #Повертає ID нашого повідомлення з БД базуючись на ID повідомлення з донорського каналу    
-def get_my_id_by_original(source_id : int, db: Session):
+def get_target_id_by_source(source_id: int, db: Session):
+    target = (
+        db.query(models.TargetMessage)
+        .filter(models.TargetMessage.source_id == source_id)
+        .first()
+    )
 
-    our_message = db.query(models.TargetMessage).filter(models.TargetMessage.source_id == source_id).first()
-    
-    if not our_message:
+    if not target:
         return None
-    
-    return our_message.message_id
+
+    return target.message_id_tg
 
 #Видаляє наше повідомлення з БД(Насправді просто позначає наше повідомлення як видалене)
 def delete_pair(source_id: int, db: Session):
-    # 1. Знаходимо наш запис
-    target = db.query(models.TargetMessage).filter(models.TargetMessage.source_id == source_id).first()
-    
-    if target:
-        # 2. Оновлюємо статус замість фізичного видалення (це краще для історії!)
-        target.status = "deleted"
-        db.commit()
-        return True
-    return False
+    target = (
+        db.query(models.TargetMessage)
+        .filter(models.TargetMessage.source_id == source_id)
+        .first()
+    )
+
+    if not target:
+        return False
+
+    target.is_deleted = True
+    db.commit()
+
+    return True
 
 #Додає повідомлення донора в таблицю SourceMessage та наше в таблицю TargetMessage
-def create_pair(db: Session,
-                channel_id: int,
-                text: str,
-                price: int,
-                new_price: int,
-                source_message_id : int,
-                is_product: bool,
-                our_message_id: int):
-    
-    source_message = models.SourceMessage(
-        channel_id = channel_id,
-        message_id = source_message_id,
-        text = text,
-        price = price,
-        is_product = is_product
+def create_pair(
+    db: Session,
+    channel_id: int,
+    text: str,
+    price: int,
+    new_price: int,
+    source_message_id_tg: int,
+    target_message_id_tg: int
+):
+    try:
+        # 1. створюємо source
+        source = models.SourceMessage(
+            channel_id=channel_id,
+            message_id_tg=source_message_id_tg,
+            text=text,
+            price=price
+        )
+
+        db.add(source)
+        db.flush()  # щоб отримати source.id
+
+        # 2. створюємо target
+        target = models.TargetMessage(
+            source_id=source.id,
+            message_id_tg=target_message_id_tg,
+            text=text,
+            price=new_price
+        )
+
+        db.add(target)
+        db.commit()
+
+        return {
+            "source_id": source.id,
+            "target_id": target.id
+        }
+
+    except Exception:
+        db.rollback()
+        raise
+
+#Оновлює пару
+def update_pair(
+    db: Session,
+    source_id: int,
+    new_text: str | None = None,
+    new_price: int | None = None
+):
+    source = (
+        db.query(models.SourceMessage)
+        .filter(models.SourceMessage.id == source_id)
+        .first()
     )
 
+    if not source:
+        return False
 
-    our_message = models.TargetMessage(
-        source_id = source_message_id,
-        message_id = our_message_id,
-        text = text,
-        price = new_price,
-    )
+    if new_text is not None:
+        source.text = new_text
 
-    db.add(source_message)
+    if new_price is not None:
+        source.price = new_price
+
     db.commit()
-    db.refresh(source_message)
-
-    db.add(our_message)
-    db.commit()
-    db.refresh(our_message)
+    return True
