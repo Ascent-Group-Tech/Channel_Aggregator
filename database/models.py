@@ -21,7 +21,7 @@ class SourceMessage(Base):
 
     #ID повідомлення та каналу в якому воно опубліковане
     channel_id: Mapped[int] = mapped_column(ForeignKey("channels.channel_id"))
-    message_id: Mapped[int] = mapped_column(index=True)
+    message_id: Mapped[int] = mapped_column(index=True, primary_key=True)
     
     #Інформація про повідомлення
     text: Mapped[str | None] = mapped_column(Text)
@@ -46,10 +46,10 @@ class TargetMessage(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     #ID повідомлення в таблиці з яким зв'язане наше повідомлення
-    source_id: Mapped[int] = mapped_column(ForeignKey("source_messages.id"))
+    source_id: Mapped[int] = mapped_column(ForeignKey("source_messages.message_id"))
     
     #ID нашого повідомлення
-    message_id: Mapped[int] = mapped_column(index=True)
+    message_id: Mapped[int] = mapped_column(index=True, unique=True)
     
     #Інформація про повідомлення
     text: Mapped[str | None] = mapped_column(Text)
