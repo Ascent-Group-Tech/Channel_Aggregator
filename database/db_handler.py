@@ -43,3 +43,37 @@ def delete_pair(source_id: int, db: Session):
         db.commit()
         return True
     return False
+
+#Додає повідомлення донора в таблицю SourceMessage та наше в таблицю TargetMessage
+def create_pair(db: Session,
+                channel_id: int,
+                text: str,
+                price: int,
+                new_price: int,
+                source_message_id : int,
+                is_product: bool,
+                our_message_id: int):
+    
+    source_message = models.SourceMessage(
+        channel_id = channel_id,
+        message_id = source_message_id,
+        text = text,
+        price = price,
+        is_product = is_product
+    )
+
+
+    our_message = models.TargetMessage(
+        source_id = source_message_id,
+        message_id = our_message_id,
+        text = text,
+        price = new_price,
+    )
+
+    db.add(source_message)
+    db.commit()
+    db.refresh(source_message)
+
+    db.add(our_message)
+    db.commit()
+    db.refresh(our_message)
