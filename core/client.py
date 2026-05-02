@@ -94,3 +94,4 @@ class UserBot:
 
 
 userbot = UserBot()
+app = userbot.app
