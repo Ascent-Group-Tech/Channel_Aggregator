@@ -18,22 +18,43 @@ async def handle_new_post(client, message):
     text = message.text or message.caption
 
     if not text:
-        return "Немає тексту"
+        return 
 
     # 2. Парсер перевіряє чи це продукт
     parsed = parse_message(text)
 
     if not parsed.is_product:
-        return "Це не продукт"
+        return 
 
     # 3. Створює новий текст
-    new_text = f"{text}\n\n💰 {parsed.final_price}"
+    new_caption = f"{text}\n\n💰 {parsed.final_price}"
 
     # 4. Відправляє до каналу нового
-    sent = await userbot.safe_send(channel, new_text)
+    sent = None
 
-    if not sent:
-        return "Проблема з базою"
+    if message.media_group_id:
+
+        album = await client.get_media_group(message.chat.id, message.id)
+
+        sent = await userbot.safe_send_album(
+            TARGET_CHANNEL,
+            album,
+            new_caption
+        )
+
+    elif message.photo or message.video:
+
+        sent = await userbot.app.send_photo(
+            TARGET_CHANNEL,
+            message.photo.file_id if message.photo else message.video.file_id,
+            caption=new_caption
+        )
+
+    else:
+        sent = await userbot.safe_send(
+            TARGET_CHANNEL,
+            new_caption
+        )
 
     # 5. Записує до бази данних (source → target)
     save_pair(
@@ -45,6 +66,7 @@ async def handle_new_post(client, message):
         source_message_id_tg=message.id,
         target_message_id_tg=sent.id
     )
+    
 
 
 async def main():
