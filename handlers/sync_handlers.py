@@ -5,12 +5,13 @@ from core.client import userbot, app
 from logic.parser import parse_message
 from database.db_handler import save_pair
 from database.db_handler import SessionLocal
+from config import TARGET_CHANNEL
 
 
 db = SessionLocal()
+channel=TARGET_CHANNEL
 
-
-@app.on_message(filters.chat("channel_id"))
+@app.on_message(filters.chat(channel))
 async def handle_new_post(client, message):
 
     # 1. Аналізує пост
@@ -29,13 +30,13 @@ async def handle_new_post(client, message):
     new_text = f"{text}\n\n💰 {parsed.final_price}"
 
     # 4. Відправляє до каналу нового
-    sent = await userbot.safe_send("YOUR_CHANNEL", new_text)
+    sent = await userbot.safe_send(channel, new_text)
 
     if not sent:
         return "Проблема з базою"
 
     # 5. Записує до бази данних (source → target)
-    create_pair(
+    save_pair(
         db=db,
         channel_id=1,
         text=text,
