@@ -9,15 +9,15 @@ from config import TARGET_CHANNEL, SOURCE_CHANNEL
 
 
 db = SessionLocal()
+channel=TARGET_CHANNEL
 
 
-
-@app.on_message(filters.chat(TARGET_CHANNEL))
+@app.on_message(filters.chat(channel))
 async def handle_new_post(client, message):
 
     # 1. Аналізує пост
     text = message.text or message.caption
-
+   
     if not text:
         return 
 
@@ -27,8 +27,13 @@ async def handle_new_post(client, message):
     if not parsed.is_product:
         return 
 
-    # 3. Створює новий текст
-    new_caption = f"{text}\n\n💰 {parsed.final_price}"
+
+    # 3. Створює новий текст 
+    new_text = text.replace(
+        f"{parsed.currency}{parsed.price}",
+        f"{parsed.currency}{parsed.final_price}"
+    )
+    new_caption = f"{new_text}\n\n💰"
 
     # 4. Відправляє до каналу нового
     sent = None
@@ -58,6 +63,7 @@ async def handle_new_post(client, message):
         source_message_id_tg=message.id,
         target_message_id_tg=sent.id
     )
+
     
 
 
