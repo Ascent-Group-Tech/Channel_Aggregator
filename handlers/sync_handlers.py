@@ -1,65 +1,53 @@
 import asyncio
-from pyrogram import Client, filters
-from pyrogram.types import Message
+from hydrogram import Client, filters
 from core.client import userbot, app
 from logic.parser import parse_message
 from database.db_handler import save_pair
-from database.db_handler import SessionLocal
+from database.database import SessionLocal # Імпортуємо фабрику сесій
 from config import TARGET_CHANNEL, SOURCE_CHANNEL
 
-
-db = SessionLocal()
-channel=TARGET_CHANNEL
-
-
-@app.on_message(filters.chat(channel))
+@app.on_message(filters.chat(SOURCE_CHANNEL))
 async def handle_new_post(client, message):
-
-    # 1. Аналізує пост
     text = message.text or message.caption
-   
     if not text:
         return 
 
-    # 2. Парсер перевіряє чи це продукт
     parsed = parse_message(text)
-
     if not parsed.is_product:
         return 
 
-
-    # 3. Створює новий текст 
-    new_text = text.replace(
-        f"{parsed.currency}{parsed.price}",
-        f"{parsed.currency}{parsed.final_price}"
-    )
+    old_price_str = f"{parsed.price}"
+    new_price_str = f"{parsed.final_price}"
+    new_text = text.replace(old_price_str, new_price_str)
     new_caption = f"{new_text}\n\n💰"
 
-    # 4. Відправляє до каналу нового
-    sent = None
+    sent_msg = None
 
-    if message.media_group_id:
+    try:
+        if message.media_group_id:
+            album = await client.get_media_group(message.chat.id, message.id)
+            # safe_send_album повертає List[Message]
+            sent_list = await userbot.safe_send_album(
+                TARGET_CHANNEL, 
+                album, 
+                new_caption
+            )
+            if sent_list:
+                sent_msg = sent_list[0] # Беремо перше повідомлення з альбому
+        else:
+            sent_msg = await userbot.safe_send(
+                TARGET_CHANNEL, 
+                new_caption
+            )
 
-        album = await client.get_media_group(message.chat.id, message.id)
+        if sent_msg:
+            with SessionLocal() as db: # Контекстний менеджер сам закриє сесію
+                save_pair(
+                    db=db,
+                    source_id=message.id,
+                    target_id=sent_msg.id,
+                )
+                print(f"✅ Успішно: {message.id} -> {sent_msg.id}")
 
-        sent = await userbot.safe_send_album(
-            SOURCE_CHANNEL,
-            album,
-            new_caption
-        )
-    else:
-        sent = await userbot.safe_send(
-            SOURCE_CHANNEL,
-            new_caption
-        )
-
-    # 5. Записує до бази данних (source → target)
-    save_pair(
-        db=db,
-        channel_id=channel,
-        text=text,
-        price=parsed.price,
-        new_price=parsed.final_price,
-        source_message_id_tg=message.id,
-        target_message_id_tg=sent.id
-    )
+    except Exception as e:
+        print(f"❌ Помилка в хендлері: {e}")

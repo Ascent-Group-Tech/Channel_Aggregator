@@ -1,14 +1,23 @@
 from core.client import userbot
 import asyncio
-from pyrogram.sync import idle
+from hydrogram import idle
 import logging
-
-#TODO: імпортувати хендлери
 import handlers.sync_handlers
+from database.database import dbEngine, Base, get_db
+from database.database import DB_PATH
+
+Base.metadata.create_all(bind=dbEngine)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+import os
 
+print(f"--- DEBUG INFO ---")
+print(f"Поточна робоча директорія (CWD): {os.getcwd()}")
+print(f"Шлях до БД: {DB_PATH}")
+print(f"Чи існує папка для БД? {os.path.exists(DB_PATH.parent)}")
+print(f"Чи є права на запис у папку? {os.access(DB_PATH.parent, os.W_OK)}")
+print(f"------------------")
 async def main():
     try:
         await userbot.start()

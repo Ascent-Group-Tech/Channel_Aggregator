@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-import models
+from . import models
 
 
 def save_pair(db: Session, source_id: int, target_id: int):

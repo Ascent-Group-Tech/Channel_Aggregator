@@ -5,7 +5,7 @@ from pathlib import Path
 #Формуємо шлях до БД. app.db буде в корені проекту
 BASE_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = BASE_DIR / "app.db"
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_PATH}"
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_PATH.absolute()}"
 
 dbEngine = create_engine(
     SQLALCHEMY_DATABASE_URL,

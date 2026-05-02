@@ -1,6 +1,6 @@
-from pyrogram.client import Client
-from pyrogram.errors import FloodWait, RPCError, PeerIdInvalid, MessageIdInvalid, Unauthorized
-from pyrogram.types import InputMediaPhoto, InputMediaVideo, InputMedia, Message
+from hydrogram.client import Client
+from hydrogram.errors import FloodWait, RPCError, PeerIdInvalid, MessageIdInvalid, Unauthorized
+from hydrogram.types import InputMediaPhoto, InputMediaVideo, InputMedia, Message
 import logging
 from config import API_ID, API_HASH
 import asyncio
