@@ -4,7 +4,7 @@ from hydrogram import idle
 import logging
 import handlers.sync_handlers
 from database.database import dbEngine, Base, get_db
-from database.database import DB_PATH
+from core.client import app
 
 Base.metadata.create_all(bind=dbEngine)
 
@@ -12,12 +12,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 import os
 
-print(f"--- DEBUG INFO ---")
-print(f"Поточна робоча директорія (CWD): {os.getcwd()}")
-print(f"Шлях до БД: {DB_PATH}")
-print(f"Чи існує папка для БД? {os.path.exists(DB_PATH.parent)}")
-print(f"Чи є права на запис у папку? {os.access(DB_PATH.parent, os.W_OK)}")
-print(f"------------------")
 async def main():
     try:
         await userbot.start()
@@ -29,6 +23,8 @@ async def main():
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        loop = asyncio.get_event_loop()
+        # Запускаємо нашу головну функцію саме в ньому
+        loop.run_until_complete(main())
     except KeyboardInterrupt:
         logger.info("Програма зупинена вручну")

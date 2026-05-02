@@ -91,7 +91,26 @@ class UserBot:
         except Exception as e:
             logger.error(f"Помилка видалення {e}")
             return None
-
+    async def safe_copy(self, chat_id: int | str, message: Message, new_text: str):
+        """
+        Універсальна функція: якщо це медіа (фото/відео) - копіює його з новим підписом.
+        Якщо це просто текст - надсилає текст.
+        """
+        try:
+            if message.media:
+                # Копіюємо файл на серверах Telegram, просто міняємо підпис (caption)
+                return await message.copy(chat_id, caption=new_text)
+            else:
+                # Якщо це голий текст
+                return await self.app.send_message(chat_id, new_text)
+        except FloodWait as e:
+            wait_time = int(e.value) if isinstance(e.value, (int, str)) else 60
+            logger.warning(f"FloodWait (copy): Треба зачекати {wait_time} секунд")
+            await asyncio.sleep(wait_time)
+            return await self.safe_copy(chat_id, message, new_text)
+        except Exception as e:
+            logger.error(f"Невдалось скопіювати повідомлення: {e}")
+            return None
 
 userbot = UserBot()
 app = userbot.app

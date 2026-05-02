@@ -26,11 +26,13 @@ class ParsedMessage:
     price: Optional[float]
     currency: Optional[str]
     final_price: Optional[float]
+    original_substring: Optional[str] = None  # Точний збіг, напр. "₴ 100"
+    emoji: Optional[str] = None
 
 
 def parse_message(
     text: str,
-    min_length: int = 20,
+    min_length: int = 1,
     markup_percent: float = 15.0,
 ) -> ParsedMessage:
     """
@@ -105,4 +107,6 @@ def parse_message(
         price=price,
         currency=_CURRENCY_BY_EMOJI[emoji],
         final_price=final_price,
+        original_substring=match.group(0),
+        emoji=emoji
     )
