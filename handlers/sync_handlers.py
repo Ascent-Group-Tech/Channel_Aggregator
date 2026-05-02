@@ -3,7 +3,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from core.client import userbot, app
 from logic.parser import parse_message
-from database.db_handler import create_pair
+from database.db_handler import save_pair
 from database.db_handler import SessionLocal
 
 
