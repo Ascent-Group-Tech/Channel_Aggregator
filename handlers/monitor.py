@@ -1,3 +1,3 @@
 import userbot
-import parser.py from logic
-import db_handler.py from database
+from logic import parser
+from database import db_handler
