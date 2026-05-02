@@ -1,7 +1,7 @@
 import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from core.client import userbot
+from core.client import userbot, app
 from logic.parser import parse_message
 from database.db_handler import create_pair
 from database.db_handler import SessionLocal
@@ -10,7 +10,7 @@ from database.db_handler import SessionLocal
 db = SessionLocal()
 
 
-@userbot.on_message(filters.chat("channel_id"))
+@app.on_message(filters.chat("channel_id"))
 async def handle_new_post(client, message):
 
     # 1. Аналізує пост
