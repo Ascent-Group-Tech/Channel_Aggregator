@@ -5,13 +5,14 @@ from core.client import userbot, app
 from logic.parser import parse_message
 from database.db_handler import save_pair
 from database.db_handler import SessionLocal
-from config import TARGET_CHANNEL
+from config import TARGET_CHANNEL, SOURCE_CHANNEL
 
 
 db = SessionLocal()
-channel=TARGET_CHANNEL
 
-@app.on_message(filters.chat(channel))
+
+
+@app.on_message(filters.chat(TARGET_CHANNEL))
 async def handle_new_post(client, message):
 
     # 1. Аналізує пост
@@ -37,29 +38,20 @@ async def handle_new_post(client, message):
         album = await client.get_media_group(message.chat.id, message.id)
 
         sent = await userbot.safe_send_album(
-            TARGET_CHANNEL,
+            SOURCE_CHANNEL,
             album,
             new_caption
         )
-
-    elif message.photo or message.video:
-
-        sent = await userbot.app.send_photo(
-            TARGET_CHANNEL,
-            message.photo.file_id if message.photo else message.video.file_id,
-            caption=new_caption
-        )
-
     else:
         sent = await userbot.safe_send(
-            TARGET_CHANNEL,
+            SOURCE_CHANNEL,
             new_caption
         )
 
     # 5. Записує до бази данних (source → target)
     save_pair(
         db=db,
-        channel_id=1,
+        channel_id=channel,
         text=text,
         price=parsed.price,
         new_price=parsed.final_price,
