@@ -63,13 +63,3 @@ async def handle_new_post(client, message):
         source_message_id_tg=message.id,
         target_message_id_tg=sent.id
     )
-
-    
-
-
-async def main():
-    await userbot.start()
-    await asyncio.Event().wait()
-
-
-asyncio.run(main())
