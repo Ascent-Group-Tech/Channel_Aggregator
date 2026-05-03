@@ -54,18 +54,12 @@ async def handle_edit_post(client: Client, message: Message):
     new_caption = updated_message(parsed, text)
     await userbot.safe_edit(TARGET_CHANNEL, our_message_id, new_caption);
 
-@app.on_deleted_messages(filters.chat(channel))
+@app.on_deleted_messages()
 async def handle_delete_post(client: Client, messages: list[Message]):
-
     for message in messages:
         our_message_id = get_my_id_by_original(message.id)
         if not our_message_id:
             continue
-    
-        text = message.text or message.caption
-        parsed = parse_message(text)
-        if not parsed.is_product:
-            continue
-        await userbot.safe_delete(TARGET_CHANNEL, message.id)
+        await userbot.safe_delete(TARGET_CHANNEL, our_message_id)
         delete_pair(message.id)
 
