@@ -45,7 +45,7 @@ def delete_pair(source_id: int):
         if not pair:
             return False
 
-        pair.is_deleted = True
+        db.delete(pair)
         db.commit()
         return True
 
