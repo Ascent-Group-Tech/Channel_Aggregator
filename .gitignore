@@ -222,3 +222,6 @@ venv/*
 .env
 *.session
 *.session-journal
+
+#Data base
+*.db
