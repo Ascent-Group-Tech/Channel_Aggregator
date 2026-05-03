@@ -79,7 +79,7 @@ class UserBot:
             logger.error(f"Помилка відправки альбому: {e}")
             return None
 
-    async def safe_edit(self, chat_id: int, message_id: int, text: str, **kwargs):
+    async def safe_edit(self, chat_id: int | str, message_id: int, text: str, **kwargs):
         try:
             return await self.app.edit_message_text(chat_id, message_id, text, **kwargs)
         except Exception as e:
