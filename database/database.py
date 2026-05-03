@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from pathlib import Path
+from contextlib import contextmanager
 
 #Формуємо шлях до БД. app.db буде в корені проекту
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,9 +22,13 @@ SessionLocal = sessionmaker(
 Base = declarative_base()
 
 
+@contextmanager
 def get_db():
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
