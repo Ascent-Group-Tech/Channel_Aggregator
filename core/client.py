@@ -1,12 +1,19 @@
 from hydrogram.client import Client
 from hydrogram.errors import FloodWait, RPCError, PeerIdInvalid, MessageIdInvalid, Unauthorized
-from hydrogram.types import InputMediaPhoto, InputMediaVideo, InputMedia, Message
+from hydrogram.types import InputMediaPhoto, InputMediaVideo, Message
+from database.db_handler import get_last_seen_source_id
 import logging
-from config import API_ID, API_HASH
+from typing import Iterable
+from config import API_ID, API_HASH, TARGET_CHANNEL
+from logic.parser import updated_message, parse_message
+from database.db_handler import save_pair
 import asyncio
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+if not TARGET_CHANNEL:
+    raise ValueError("Немає Target_Channel")
 
 class UserBot:
     def __init__(self):
@@ -79,18 +86,19 @@ class UserBot:
             logger.error(f"Помилка відправки альбому: {e}")
             return None
 
-    async def safe_edit(self, chat_id: int, message_id: int, text: str, **kwargs):
+    async def safe_edit(self, chat_id: int | str, message_id: int, text: str, **kwargs):
         try:
             return await self.app.edit_message_text(chat_id, message_id, text, **kwargs)
         except Exception as e:
             logger.error(f"Помилка редагування: {e}")
 
-    async def safe_delete(self, chat_id: int, message_id: int):
+    async def safe_delete(self, chat_id: int | str, message_id: int | Iterable[int]):
         try:
             return await self.app.delete_messages(chat_id, message_id)
         except Exception as e:
             logger.error(f"Помилка видалення {e}")
             return None
+
     async def safe_copy(self, chat_id: int | str, message: Message, new_text: str):
         """
         Універсальна функція: якщо це медіа (фото/відео) - копіює його з новим підписом.
@@ -111,6 +119,53 @@ class UserBot:
         except Exception as e:
             logger.error(f"Невдалось скопіювати повідомлення: {e}")
             return None
+
+    async def send(self, chat_id: int | str,  message: Message, new_caption: str):
+        """
+        Головна супер функція для відправляння повідомлення правильно:
+        if sended := userbot.send(message, new_caption):
+            pass
+        """
+        sent = None
+        if message.media_group_id:
+            await asyncio.sleep(2.5)
+            album = await self.app.get_media_group(message.chat.id, message.id)
+
+            sent = await self.safe_send_album(
+                chat_id,
+                album,
+                new_caption
+            )
+        else:
+            sent = await self.safe_copy(
+                chat_id,
+                message,
+                new_caption
+            )
+        return sent
+
+    async def catch_up_history(self, chat_id: int | str):
+        last_seen_id = get_last_seen_source_id()
+        missed_messages = []
+
+        async for message in self.app.get_chat_history(chat_id):
+            if message.id <= last_seen_id:
+                break;
+            missed_messages.append(message)
+
+        for message in reversed(missed_messages):
+
+            text = message.text or message.caption
+            parsed = parse_message(text)
+            if not parsed.is_product:
+                continue
+
+            new_caption = updated_message(parsed, text)
+
+            if sended := await self.send(TARGET_CHANNEL, message, new_caption):
+                target_message_id = sended[0].id if isinstance(sended, list) else sended.id
+                save_pair(message.id, target_message_id)
+
 
 userbot = UserBot()
 app = userbot.app

@@ -110,3 +110,11 @@ def parse_message(
         original_substring=match.group(0),
         emoji=emoji
     )
+def updated_message(parsed: ParsedMessage, text: str) -> str:
+    
+    final_p = int(parsed.final_price) if parsed.final_price.is_integer() else parsed.final_price
+
+    new_price_str = f"{parsed.emoji} {final_p}"
+    new_caption = text.replace(parsed.original_substring, new_price_str)
+
+    return new_caption
