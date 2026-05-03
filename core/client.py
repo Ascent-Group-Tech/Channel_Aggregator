@@ -148,11 +148,7 @@ class UserBot:
         last_seen_id = get_last_seen_source_id()
         missed_messages = []
 
-        history_generator = await self.app.get_chat_history(chat_id)
-        if not history_generator:
-            return
-
-        async for message in history_generator:
+        async for message in self.app.get_chat_history(chat_id):
             if message.id <= last_seen_id:
                 break;
             missed_messages.append(message)
