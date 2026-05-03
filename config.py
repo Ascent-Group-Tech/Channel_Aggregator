@@ -15,4 +15,6 @@ API_HASH = str(API_HASH)
 
 SOURCE_CHANNEL = os.getenv("SOURCE_CHANNEL")
 TARGET_CHANNEL = os.getenv("TARGET_CHANNEL")
-MARKUP = float(os.getenv("PERCENT_MARKUP")) / 100
+
+if not SOURCE_CHANNEL or not TARGET_CHANNEL:
+    raise ValueError("SOURCE_CHENNEL or TARGET_CHENNEL не знайдені в .env")
