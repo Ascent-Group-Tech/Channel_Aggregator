@@ -33,12 +33,14 @@ async def handle_new_post(client, message):
 
 
     # 5. Відправляємо та Записує до бази данних (source → target)
-    if sent := await userbot.send(TARGET_CHANNEL, message, new_caption):
-        target_message_id = sent[0].id if isinstance(sent, list) else sent.id
-        save_pair(
-            source_id=message.id,
-            target_id=target_message_id
-        )
+    if result := await userbot.send(TARGET_CHANNEL, message, new_caption):
+        original, sent_message = result
+
+        for src_m, tgt_m in zip(original, sent_message):
+            save_pair(
+                source_id=src_m.id,
+                target_id=tgt_m.id
+            )
 
 @app.on_edited_message(filters.chat(channel))
 async def handle_edit_post(client: Client, message: Message):

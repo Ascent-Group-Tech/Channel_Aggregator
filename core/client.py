@@ -136,12 +136,16 @@ class UserBot:
                 album,
                 new_caption
             )
+            if sent:
+                return album, sent
         else:
             sent = await self.safe_copy(
                 chat_id,
                 message,
                 new_caption
             )
+            if sent:
+                return [message], [sent]
         return sent
 
     async def catch_up_history(self, chat_id: int | str):
