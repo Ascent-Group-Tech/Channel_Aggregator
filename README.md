@@ -257,3 +257,11 @@ When creating new modules, follow the folder structure:
 - Event handlers → `handlers/`
 - Configuration → root `config.py`
 - Telegram client methods → `core/`
+
+## Contributors
+
+<a href="https://github.com/Ascent-Group-Tech/Channel_Aggregator/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Ascent-Group-Tech/Channel_Aggregator" />
+</a>
+
+See the [full contributors list](https://github.com/Ascent-Group-Tech/Channel_Aggregator/graphs/contributors).
